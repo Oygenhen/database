@@ -1,0 +1,284 @@
+CREATE TABLE Branch
+	(bno INT NOT NULL,
+	street VARCHAR2(30) NOT NULL,
+	city VARCHAR2(20) NOT NULL,
+	tel_no CHAR(13) UNIQUE,
+	PRIMARY KEY(bno)
+);
+
+CREATE TABLE Staff
+	(sno INT GENERATED ALWAYS AS IDENTITY(START with 10 INCREMENT BY 5),
+	fname VARCHAR2(30) NOT NULL,
+	lname VARCHAR2(30) NOT NULL,
+	adress VARCHAR2(30) NOT NULL,
+	tel_no CHAR(13) UNIQUE,
+	position VARCHAR2(30) NOT NULL,
+	sex CHAR(6) NOT NULL,
+	dob DATE NOT NULL,
+	salary NUMBER NOT NULL,
+	bno INT NOT NULL,
+	PRIMARY KEY(sno)
+);
+
+
+
+
+CREATE TABLE Property_for_rent
+	(pno INT NOT NULL,
+	street VARCHAR2(30) NOT NULL,
+	city VARCHAR2(30) NOT NULL,
+	type CHAR NOT NULL,
+	rooms INT NOT NULL,
+	rent NUMBER NOT NULL,
+	ono INT NOT NULL,
+	sno INT NOT NULL,
+	bno INT NOT NULL,
+	PRIMARY KEY(pno)
+);
+
+
+
+ CREATE TABLE Renter
+	(rno INT NOT NULL,
+	fname VARCHAR2(30) NOT NULL,
+	lname VARCHAR2(30) NOT NULL,
+	adress VARCHAR2(30) NOT NULL,
+	tel_no CHAR(13) UNIQUE NOT NULL,
+	pref_type CHAR NOT NULL,
+	max_rent NUMBER NOT NULL,
+	bno INT NOT NULL,
+	PRIMARY KEY(rno)
+);
+
+CREATE TABLE Owner
+	(ono INT GENERATED ALWAYS AS IDENTITY(START with 1 INCREMENT BY 1),
+	fname VARCHAR2(30) NOT NULL,
+	lname VARCHAR2(30) NOT NULL,
+	adress VARCHAR2(30) NOT NULL,
+	tel_no CHAR(13) NOT NULL,
+	PRIMARY KEY(ono)
+);
+
+
+CREATE TABLE Viewing
+	(rno INT NOT NULL,
+	pno INT NOT NULL,
+	date_o DATE NOT NULL,
+	comment_o LONG
+);
+
+--Staff
+
+ALTER TABLE Staff ADD CONSTRAINT Branch_bno_fk FOREIGN KEY(bno) REFERENCES Branch;
+ALTER TABLE Staff ADD CONSTRAINT choise_sex CHECK(sex IN('male','female'));
+
+--Property_for_rent
+
+ALTER TABLE Property_for_rent ADD CONSTRAINT choise_type CHECK(type IN('h','f'));
+
+ALTER TABLE Property_for_rent ADD CONSTRAINT fk_ono_Owner FOREIGN KEY (ono) REFERENCES Owner;
+ALTER TABLE Property_for_rent ADD CONSTRAINT fk_sno_Staff FOREIGN KEY (sno) REFERENCES Staff;
+ALTER TABLE Property_for_rent ADD CONSTRAINT fk_bno_Branch FOREIGN KEY (bno) REFERENCES Branch;
+
+--Renter
+
+ALTER TABLE Renter ADD CONSTRAINT choise_pref_type CHECK(pref_type IN('h','f'));
+ALTER TABLE Renter ADD CONSTRAINT fkbno_Branch FOREIGN KEY (bno) REFERENCES Branch;
+
+--Viewing
+
+ALTER TABLE Viewing ADD CONSTRAINT pk_Renter_Property_for_rent PRIMARY KEY (rno,pno);
+ALTER TABLE Viewing ADD CONSTRAINT fk_rno_Renter FOREIGN KEY (rno) REFERENCES Renter;
+ALTER TABLE Viewing ADD CONSTRAINT fk_pno_Property_for_rent FOREIGN KEY (pno) REFERENCES Property_for_rent;
+
+--Офисы
+	
+INSERT INTO Branch VALUES (1,'Yakuba Kolasa','Minsk','+375333802802');
+INSERT INTO Branch VALUES (2,'Pushkina','Mogilev','+375293940802');
+INSERT INTO Branch VALUES (3,'Syrganava','Brest','+375333809384');
+INSERT INTO Branch VALUES (4,'Gikala','Vitebsk','+375290402802');
+INSERT INTO Branch VALUES (5,'Hermanovskaya','Grodno','+375290402762');
+
+--Сотрудники
+
+INSERT INTO Staff (fname, lname, adress, tel_no, position, sex, dob, salary, bno) VALUES ('Slava','Mironov','Pushkina','+375333809376','director','male', TO_DATE('09.06.1999', 'DD.MM.YYYY'),900, 5);
+INSERT INTO Staff (fname, lname, adress, tel_no, position, sex, dob, salary, bno) VALUES ('Fedya','Nikolaev','Karla Marksa','+375294419376','Sales Manager','male', TO_DATE('10.07.1989', 'DD.MM.YYYY'),800, 5);
+INSERT INTO Staff (fname, lname, adress, tel_no, position, sex, dob, salary, bno) VALUES ('Petya','Pavlov','Yakuba Kolasa','+375333936376','real estate agent','male', TO_DATE('15.04.1998', 'DD.MM.YYYY'),850, 4);
+INSERT INTO Staff (fname, lname, adress, tel_no, position, sex, dob, salary, bno) VALUES ('Elena','Ponamoreva','Syrganava','+375293895876','manager`s assistant','female', TO_DATE('18.10.1993', 'DD.MM.YYYY'),700, 3);
+INSERT INTO Staff (fname, lname, adress, tel_no, position, sex, dob, salary, bno) VALUES ('Ivan','Moroz','Syrganava','+375333047376','director','male', TO_DATE('29.09.1994', 'DD.MM.YYYY'),950, 3);
+
+UPDATE Staff SET fname = 'Slava' WHERE bno = 4;
+--Арендаторы
+
+INSERT INTO Renter VALUES (1, 'Petya', 'Komarov', 'Brest','+375293895877' , 'h', 500, 5);
+INSERT INTO Renter VALUES (2, 'Alexander', 'Yschuck', 'Minsk','+375293895878' , 'f', 700, 4);
+INSERT INTO Renter VALUES (3, 'Alesya', 'Petroshevich', 'Grodno','+375293895879' , 'f', 300, 4);
+INSERT INTO Renter VALUES (4, 'Svetka', 'Pushkina', 'Grodno','+375293895880' , 'f', 350, 3);
+INSERT INTO Renter VALUES (5, 'Pashka', 'Kudravtcev', 'Brest','+375293895881' , 'h', 470, 3);
+
+/*UPDATE Renter SET adress = 'Brest, yl. Kolasa' WHERE rno =1 ;
+UPDATE Renter SET adress = 'Grodno, yl. Bedy' WHERE rno =2 ;
+UPDATE Renter SET adress = 'Grodno, yl. Pyshkina' WHERE rno =3 ;
+UPDATE Renter SET adress = 'Grodno, yl. Syrganova' WHERE rno =4 ;
+UPDATE Renter SET adress = 'Brest, yl. Gikalo' WHERE rno =5 ;
+*/
+
+--Владельцы
+
+INSERT INTO Owner (fname, lname, adress, tel_no) SELECT fname, lname, adress, tel_no FROM Staff;
+
+
+/*INSERT INTO Owner VALUES (1, 'Pasha', 'Lebedev', 'Brest, st.Gogolya', '+375293895882');
+INSERT INTO Owner VALUES (2, 'Lesha', 'Lazarev', 'Brest, st.Syrganava ', '+375293895883');
+INSERT INTO Owner VALUES (3, 'Masha', 'Simonova', 'Grodno, st.Kolasa', '+375293895884');
+INSERT INTO Owner VALUES (4, 'Dashs', 'Romanova', 'Grodno, st.Dombrovskogo', '+375293895885');
+INSERT INTO Owner VALUES (5, 'Stepka', 'Ponamarev', 'Vitebsk, st.Kalinina', '+375293895884');
+*/
+
+--Информация об объектах недвежимости
+--Создание синонима
+
+CREATE PUBLIC SYNONYM PFR FOR Property_for_rent;
+
+INSERT INTO Pfr VALUES (1, 'Klenovaya', 'Brest', 'h', 2, 650,  1, 30, 3);
+INSERT INTO Pfr VALUES (2, 'Kuybisheva', 'Brest', 'f', 4, 1000,  2, 30, 3);
+INSERT INTO Pfr VALUES (3, 'Elskogo',    'Grodno', 'h', 1, 350,  3, 20, 5);
+INSERT INTO Pfr VALUES (4, 'Pionerskaya', 'Grodno', 'f', 3, 650,  4, 20, 5);
+INSERT INTO Pfr VALUES (5, 'Sportivnaya', 'Vitebsk', 'h', 3, 650,  5, 15, 4);
+
+
+--Результат осмотра
+
+INSERT INTO Viewing VALUES (1, 2, TO_DATE('12.08.2019', 'DD.MM.YYYY'), NULL);
+INSERT INTO Viewing VALUES (1, 1, TO_DATE('12.08.2019', 'DD.MM.YYYY'), 'dirty walls');
+INSERT INTO Viewing VALUES (2, 1, TO_DATE('10.10.2019', 'DD.MM.YYYY'), 'perfectly well');
+INSERT INTO Viewing VALUES (2, 4, TO_DATE('15.10.2019', 'DD.MM.YYYY'), 'the door is broken');
+INSERT INTO Viewing VALUES (2, 2, TO_DATE('21.10.2019', 'DD.MM.YYYY'), 'poor view from the window');
+
+/*UPDATE Viewing SET date_o = TO_DATE('10.10.2019', 'DD.MM.YYYY') WHERE rno =2 ;
+UPDATE Viewing SET date_o = TO_DATE('15.10.2019', 'DD.MM.YYYY') WHERE rno =2 AND pno=4 ;
+UPDATE Viewing SET date_o = TO_DATE('21.10.2019', 'DD.MM.YYYY') WHERE rno =2 AND pno=2 ;
+*/
+
+SET LINESIZE 1500;
+
+SELECT * FROM Branch;
+SELECT * FROM Staff;
+SELECT * FROM Property_for_rent;
+SELECT * FROM Renter;
+SELECT * FROM Owner;
+SELECT * FROM Viewing;
+ 
+---Вывести в одном поле фамилии и номера телефонов всех директоров----------
+
+SELECT CONCAT(lname, CONCAT ( '   ', tel_no))Lname_tel_no
+FROM Staff
+WHERE position='director';
+
+---Составить список владельцев всех 3-комнатных квартир---------------------
+
+SELECT fname, lname
+FROM Owner
+WHERE ono IN
+	(SELECT ono FROM Property_for_rent
+			WHERE type='f' AND rooms = 3);
+
+---Подсчитать количество сотрудников в каждом из отделений. Подписать вычисляемое поле как «Количество».-----
+
+SELECT bno, COUNT(sno) AS Kolichestvo
+FROM Staff
+GROUP BY bno;
+
+---Вывести все сведения об отделениях, а также количество сотрудников в них и количество обратившихся арендаторов при условии, что эти количества больше одного
+
+
+SELECT B.*, a.kol_staff, c.kol_renter
+FROM Branch b, (SELECT bno, COUNT(sno) AS kol_staff FROM Staff GROUP BY staff.bno HAVING COUNT(sno)>1 ) a, (SELECT bno, COUNT(rno) AS kol_renter FROM Renter GROUP BY renter.bno HAVING COUNT(rno)>1) c
+WHERE b.bno=a.bno and b.bno=c.bno
+
+
+
+---1.1-С информацией об офисах в Бресте--------------------------------------------------
+
+CREATE OR REPLACE VIEW Brest_Branches AS
+	SELECT * FROM Branch
+		WHERE city='Brest';
+
+SELECT *FROM Brest_Branches;
+		
+---1.2-C информацией об объектах недвижимости минимальной стоимости--------------------------
+
+CREATE OR REPLACE VIEW min_rent AS
+	SELECT * FROM Property_for_rent
+		WHERE rent =( SELECT (MIN(rent)) FROM Property_for_rent);
+		
+SELECT * FROM min_rent;
+
+---1.3-C информацией о количестве сделанных осмотров с комментариями-----------------------------
+
+CREATE OR REPLACE VIEW comment_v AS
+	SELECT (COUNT(*)) AS Viewing_with_comment_o FROM Viewing
+		WHERE comment_o IS NOT NULL;
+		
+SELECT * FROM comment_v;
+
+
+---1.4-Со сведениями об арендаторах, желающих арендовать 3-комнатные квартиры в тех же городах (поле city), где они проживают (поле address);
+
+
+
+CREATE OR REPLACE VIEW Owner_inf AS
+SELECT r.lname, r.fname, p.city, p.rooms, p.rent FROM Renter r INNER JOIN (Property_for_rent p INNER JOIN Viewing v ON p.pno=v.pno) ON r.rno=v.rno
+	WHERE  p.rooms=3 AND p.city=(SELECT regexp_substr (adress, '[^,]+') FROM Renter  WHERE  r.rno=rno) ;
+
+SELECT * FROM Owner_inf;
+
+---1.5-Cо сведениями об отделении с максимальным количеством работающих сотрудников-----------------------------------
+
+CREATE OR REPLACE VIEW 	Max_employees AS
+	SELECT *  FROM Branch
+		WHERE bno IN
+			(SELECT bno FROM Staff
+				GROUP BY bno
+				HAVING COUNT(bno) IN
+					(SELECT MAX(COUNT(sno)) FROM Staff
+						GROUP BY bno));
+
+SELECT * FROM Max_employees;
+
+---1.6-C информацией о сотрудниках и объектах, которые они предлагают в аренду в текущем квартале------------------------
+ 
+ CREATE OR REPLACE VIEW info_staff_pfr_Q AS
+	SELECT s.sno, s.lname, s.fname, p.pno, p.city, p.type, p.rooms, p.rent FROM Staff s 
+	JOIN Property_for_rent p ON s.sno=p.sno
+		WHERE pno IN
+			(SELECT pno FROM Viewing
+				WHERE TO_CHAR(date_o, 'Q')=TO_CHAR(sysdate,'Q'));
+				
+SELECT * FROM info_staff_pfr_Q;
+				
+---1.7-C информацией о владельцах, чьи дома или квартиры осматривались потенциальными арендаторами более двух раз------------
+
+CREATE OR REPLACE VIEW inf_Owner AS
+	SELECT * FROM Owner 
+		WHERE ono IN 
+			(SELECT ono FROM Property_for_rent
+				WHERE pno IN
+					(SELECT pno FROM Viewing 
+					GROUP BY pno
+					HAVING COUNT(rno)>=2));
+					
+SELECT * FROM inf_Owner;
+					
+---1.8-C информацией о собственниках с одинаковыми именами-----------------------------------------------------------
+
+CREATE OR REPLACE VIEW Owner_inf_2name AS
+	SELECT * FROM Owner o
+		WHERE
+			(SELECT count(s.Fname)
+			FROM Owner s
+			WHERE o.fname=s.fname)>1;
+			
+SELECT * FROM Owner_inf_2name;
+			
+

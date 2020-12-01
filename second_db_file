@@ -1,0 +1,574 @@
+------------Процедура------------------------------------------------------------------
+
+create or replace procedure new_tel(f_name in varchar2, teln in varchar2)  as
+  
+    cursor c1 is
+    select lno
+    from Landlords
+    where fname=f_name;
+  
+   cursor c2 is
+   select count(lno)
+   from Landlords
+   where fname=f_name;
+ 
+   cursor c3 is
+   select count(tel_no)
+   from Landlords
+   where tel_no=teln;
+ 
+   cursor c4 is
+   select tel_no
+   from Landlords
+   where tel_no=teln;
+ 
+   i number;
+   n number;
+   r number;
+   z varchar2(20);
+ 
+ 
+   begin
+ 
+   sys.dbms_output.enable;
+   open c1;
+   fetch c1 into i;
+   if (c1%rowcount=0) then dbms_output.put_line('Net takogo arendodatelya!!!');
+     else open c2;
+     fetch c2 into n;
+     if  (n>1) then dbms_output.put_line ('Naideni odnofamilci! Ix kol-vo - ' || n) ;
+     else
+     open c4;
+     fetch c4 into z;
+     if (z=teln) then dbms_output.put_line('Takoy ge nomer!!!');
+     else open c3;
+     fetch c3 into r;
+     if (r>1) then dbms_output.put_line('Odinakoviy nomer telefona!!!');
+     else
+     for Landlords in (select * from Landlords where fname=f_name)
+     loop
+    update Landlords set tel_no = teln where fname=f_name;
+    dbms_output.put_line('Старый номер телефона ' || Landlords.tel_no || ' ' ||'Новый номер телефона ' || teln);
+    end loop;
+    end if;
+    close c3;
+    end if;
+    close c4;
+    end if;
+    close c2;
+    end if;
+    close c1;
+ 
+ 
+ 
+    exception
+ 
+   when others then
+   RAISE_APPLICATION_ERROR(-20004,'Oshibka');
+ 
+   end new_tel;
+   /
+   
+   BEGIN
+   new_tel('Shpudey','+375(44)321-40-80');
+END;
+
+
+BEGIN
+   new_tel('Punko',' +375(44)427-97-93');
+END;
+
+
+BEGIN
+   new_tel('Pustupinskaya',' +375(44)427-97-91');
+END;
+
+BEGIN
+   new_tel('Arsenovich',' +375(33)738-08-26');
+END;
+   
+   
+   
+---Функция-----------------------------------
+------функция, подсчитывающая кол-во сделок, свершенных потенциальными покупателями за текущий день.
+--В вызывающую среду возвращать объекты недвижимости, учавствующие в этих сделках
+ create or replace function count_deals1
+    return int is qno1 int;
+  
+    cursor c1  is
+    select count(dno)
+    from Deals JOIN Tenants ON deals.tno=tenants.tno
+    where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+    i number;
+  
+ 
+   cursor c3 is
+   select qno
+   from Deals JOIN Tenants ON deals.tno=tenants.tno
+   where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+ 
+ 
+   begin
+ 
+ 
+   open c1;
+   fetch c1 into i;
+   if(i=0) then dbms_output.put_line('Нет заключенных сделок');
+   else
+   open c3;
+    dbms_output.put_line('Сделки, заключенные сегодня: ' ||i);
+   loop
+   fetch c3 into qno1;
+ 
+   exit when c3%notfound;
+   dbms_output.put_line('Объекты недвижимости: ' ||qno1);
+   end loop;
+   close c3;
+   end if;
+   close c1;
+ 
+   return (null);
+ 
+ 
+   exception
+  when others then
+   RAISE_APPLICATION_ERROR(-20003, 'Oshibka');
+ 
+   end count_deals1;
+   /
+
+EXECUTE DBMS_OUTPUT.PUT_LINE(count_deals1);
+
+UPDATE Deals
+SET  rental_start = TO_DATE('10.12.2019', 'DD.MM.YYYY')
+WHERE dno =12 ;
+
+-----------------------------------------------------------------------------------------------------------------------------------
+create or replace function count_deals
+   return int is dno int;
+ 
+   cursor c1  is
+   select count(dno)
+   from Deals JOIN Tenants ON deals.tno=tenants.tno
+   where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+ 
+ 
+ 
+   cursor c3 is
+   select qno
+   from Deals JOIN Tenants ON deals.tno=tenants.tno
+   where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+   i number;
+ 
+   begin
+ 
+ 
+   open c1;
+   fetch c1 into dno;
+   if(dno=0) then dbms_output.put_line('Нет заключенных сделок');
+   else
+   open c3;
+   loop
+   fetch c3 into i;
+ 
+   exit when c3%notfound;
+  dbms_output.put_line('Объекты недвижимости: ' ||i);
+  end loop;
+  dbms_output.put_line('Кол-во сделок, заключенныч сегодня: ');
+  close c3;
+  end if;
+  close c1;
+
+  return (dno);
+
+
+  exception
+  when others then
+  RAISE_APPLICATION_ERROR(-20003, 'Oshibka');
+
+  end count_deals;
+  /
+  
+  EXECUTE DBMS_OUTPUT.PUT_LINE(count_deals);
+
+UPDATE Deals
+SET  rental_start = TO_DATE('12.12.2019', 'DD.MM.YYYY')
+WHERE dno =12 ;
+
+
+---Локальный модуль-----------------------------------------------------
+create or replace procedure new_tel2(f_name in varchar2, teln in varchar2)  as
+  
+    cursor c1 is
+    select lno
+    from Landlords
+    where fname=f_name;
+  
+   cursor c2 is
+   select count(lno)
+   from Landlords
+   where fname=f_name;
+ 
+   cursor c3 is
+   select count(tel_no)
+   from Landlords
+   where tel_no=teln;
+ 
+   cursor c4 is
+   select tel_no
+   from Landlords
+   where tel_no=teln;
+ 
+   i number;
+   n number;
+   r number;
+   z varchar2(20);
+ 
+ TYPE LANDLORD_INF IS RECORD(
+ newtel Landlords.tel_no%TYPE:=0);
+ 
+ landlordsinf LANDLORD_INF;
+ function getInf(fname in VARCHAR2)
+ return LANDLORD_INF
+ is 
+ result LANDLORD_INF;
+ begin
+ Select tel_no INTO result FROM Landlords WHERE fname=f_name;
+ RETURN result;
+ end getInf;
+ 
+ 
+   begin
+ landlordsinf := getInf(f_name);
+   open c1;
+   fetch c1 into i;
+   if (c1%rowcount=0) then dbms_output.put_line('Net takogo arendodatelya!!!');
+     else open c2;
+     fetch c2 into n;
+     if  (n>1) then dbms_output.put_line ('Naideni odnofamilci! Ix kol-vo - ' || n) ;
+     else
+     open c4;
+     fetch c4 into z;
+     if (z=teln) then dbms_output.put_line('Takoy ge nomer!!!');
+     else open c3;
+     fetch c3 into r;
+     if (r>1) then dbms_output.put_line('Odinakoviy nomer telefona!!!');
+     else
+     for Landlords in (select * from Landlords where fname=f_name)
+     loop
+    update Landlords set tel_no = teln where fname=f_name;
+    dbms_output.put_line('Старый номер телефона ' || landlordsinf.newtel || ' ' ||'Новый номер телефона ' || teln);
+    end loop;
+    end if;
+    close c3;
+    end if;
+    close c4;
+    end if;
+    close c2;
+    end if;
+    close c1;
+ 
+ 
+ 
+    exception
+ 
+   when others then
+   RAISE_APPLICATION_ERROR(-20004,'Oshibka');
+ 
+   end new_tel2;
+   /
+   
+   
+    BEGIN
+   new_tel('Shpudey','+375(44)321-40-80');
+END;
+
+
+BEGIN
+   new_tel('Punko',' +375(44)427-97-93');
+END;
+
+
+BEGIN
+   new_tel('Pustupinskaya',' +375(44)427-97-91');
+END;
+
+BEGIN
+   new_tel('Arsenovich',' +375(33)738-08-26');
+END;
+   
+
+----Перегруженная функция--------------------------------------------
+функция перегружена varchar2 и int, return возвращает два параметра
+create or replace function count_deals
+  return varchar2 is dno1 varchar2(50);
+
+  cursor c1  is
+  select count(dno)
+  from Deals JOIN Tenants ON deals.tno=tenants.tno
+  where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+
+
+
+  cursor c3 is
+  select qno
+  from Deals JOIN Tenants ON deals.tno=tenants.tno
+  where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+  qno1 number;
+
+  begin
+
+
+  open c1;
+  fetch c1 into dno1;
+  if(dno1=0) then dbms_output.put_line('Нет заключенных сделок');
+  else
+  open c3;
+  loop
+  fetch c3 into qno1;
+
+  exit when c3%notfound;
+  dbms_output.put_line('Объекты недвижимости: ' ||qno1);
+  end loop;
+  close c3;
+  end if;
+  close c1;
+
+  return to_char('Количество сделок за сегодня - ' || dno1);
+
+
+  exception
+  when others then
+  RAISE_APPLICATION_ERROR(-20003, 'Oshibka');
+  end count_deals;
+  /
+
+EXECUTE DBMS_OUTPUT.PUT_LINE(count_deals);
+
+UPDATE Deals
+SET  rental_start = TO_DATE('09.12.2019', 'DD.MM.YYYY')
+WHERE dno =12 ;
+
+
+----------------Пакеты-----------------------
+
+Пакеты. Для инкапсуляции. Процедуры и функции можно группировать в пакеты. Пакеты инкапсулируют связанные функциональности в один автономный модуль.
+Пакет состоит из двух компонентов:
+ спецификация,
+ тело.
+
+ CREATE OR REPLACE PACKAGE LandDeals IS
+      procedure new_tel(f_name in varchar2, teln in varchar2);
+      function count_deals1 return int;
+      function count_deals return varchar2;
+    END LandDeals;
+    /
+
+
+
+ CREATE OR REPLACE PACKAGE BODY LandDeals IS
+  
+    procedure new_tel(f_name in varchar2, teln in varchar2)  as
+  
+    cursor c1 is
+    select lno
+    from Landlords
+    where fname=f_name;
+  
+   cursor c2 is
+   select count(lno)
+   from Landlords
+   where fname=f_name;
+ 
+   cursor c3 is
+   select count(tel_no)
+   from Landlords
+   where tel_no=teln;
+ 
+   cursor c4 is
+   select tel_no
+   from Landlords
+   where tel_no=teln;
+ 
+   i number;
+   n number;
+   r number;
+   z varchar2(20);
+ 
+ 
+   begin
+ 
+   sys.dbms_output.enable;
+   open c1;
+   fetch c1 into i;
+   if (c1%rowcount=0) then dbms_output.put_line('Net takogo arendodatelya!!!');
+     else open c2;
+     fetch c2 into n;
+     if  (n>1) then dbms_output.put_line ('Naideni odnofamilci! Ix kol-vo - ' || n) ;
+     else
+     open c4;
+     fetch c4 into z;
+     if (z=teln) then dbms_output.put_line('Takoy ge nomer!!!');
+     else open c3;
+     fetch c3 into r;
+     if (r>1) then dbms_output.put_line('Odinakoviy nomer telefona!!!');
+     else
+     for Landlords in (select * from Landlords where fname=f_name)
+     loop
+    update Landlords set tel_no = teln where fname=f_name;
+    dbms_output.put_line('Старый номер телефона ' || Landlords.tel_no || ' ' ||'Новый номер телефона ' || teln);
+    end loop;
+    end if;
+    close c3;
+    end if;
+    close c4;
+    end if;
+    close c2;
+    end if;
+    close c1;
+ 
+ 
+ 
+    exception
+ 
+   when others then
+   RAISE_APPLICATION_ERROR(-20004,'Oshibka');
+ 
+   end new_tel;
+ 
+ 
+   function count_deals
+   return int is dno int;
+ 
+   cursor c1  is
+   select count(dno)
+   from Deals JOIN Tenants ON deals.tno=tenants.tno
+   where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+ 
+ 
+ 
+   cursor c3 is
+   select qno
+   from Deals JOIN Tenants ON deals.tno=tenants.tno
+   where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+   i number;
+ 
+   begin
+ 
+ 
+   open c1;
+   fetch c1 into dno;
+   if(dno=0) then dbms_output.put_line('Нет заключенных сделок');
+   else
+   open c3;
+   loop
+   fetch c3 into i;
+ 
+   exit when c3%notfound;
+  dbms_output.put_line('Объекты недвижимости: ' ||i);
+  end loop;
+  dbms_output.put_line('Кол-во сделок, заключенныч сегодня: ');
+  close c3;
+  end if;
+  close c1;
+  return (dno);
+
+
+  exception
+  when others then
+  RAISE_APPLICATION_ERROR(-20003, 'Oshibka');
+
+  end count_deals;
+
+  function count_deals
+  return varchar2 is dno1 varchar2(50);
+
+  cursor c1  is
+  select count(dno)
+  from Deals JOIN Tenants ON deals.tno=tenants.tno
+  where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+
+
+
+  cursor c3 is
+  select qno
+  from Deals JOIN Tenants ON deals.tno=tenants.tno
+  where rental_start in (SELECT TO_DATE(SYSDATE,  'DD-MM-YY') FROM DUAL);
+  qno1 number;
+
+  begin
+
+
+  open c1;
+  fetch c1 into dno1;
+  if(dno1=0) then dbms_output.put_line('Нет заключенных сделок');
+  else
+  open c3;
+  loop
+  fetch c3 into qno1;
+
+  exit when c3%notfound;
+  dbms_output.put_line('Объекты недвижимости: ' ||qno1);
+  end loop;
+  close c3;
+  end if;
+  close c1;
+
+  return to_char('Количество сделок за сегодня - ' || dno1);
+
+
+  exception
+  when others then
+  RAISE_APPLICATION_ERROR(-20003, 'Oshibka');
+  end count_deals;
+  end LandDeals;
+  
+  /
+  
+  
+  
+  ------------------Анонимный блок--------------------
+  
+  
+DECLARE 
+result1 varchar2(60);
+result3 varchar2(60);
+ 
+BEGIN
+LandDeals.new_tel('Arsenovich',' +375(33)738-08-25');
+DBMS_OUTPUT.put_line('____________________________');
+LandDeals.new_tel('Shpudey','+375(44)321-40-80');
+DBMS_OUTPUT.put_line('____________________________');
+result1 := LandDeals.count_deals1;
+DBMS_OUTPUT.put_line(result1);
+DBMS_OUTPUT.put_line('____________________________');
+result3 := LandDeals.count_deals;
+DBMS_OUTPUT.put_line(result3);
+DBMS_OUTPUT.put_line('____________________________');
+END;
+  
+  
+  
+DECLARE 
+result1 varchar2(60);
+result3 varchar2(60);
+ 
+BEGIN
+LandDeals.new_tel('Arsenovich',' +375(33)738-08-56');
+DBMS_OUTPUT.put_line('____________________________');
+LandDeals.new_tel('Shpudey','+375(44)321-40-80');
+DBMS_OUTPUT.put_line('____________________________');
+result1 := LandDeals.count_deals1;
+DBMS_OUTPUT.put_line(result1);
+DBMS_OUTPUT.put_line('____________________________');
+result3 := LandDeals.count_deals;
+DBMS_OUTPUT.put_line(result3);
+DBMS_OUTPUT.put_line('____________________________');
+END;
+  
+  
+  
+  
+  
+  
+  
